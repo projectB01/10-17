@@ -1,5 +1,5 @@
-import dlib                     #人脸识别的库dlib
-import cv2                      #图像处理的库OpenCv
+import dlib                     
+import cv2                      
 import numpy as np
 import os
 from keras.preprocessing import image
@@ -13,47 +13,42 @@ model = load_model("C:/Users/as100/Downloads/others.h5")
 class face_emotion():
 
     def __init__(self):
-        # 使用特征提取器get_frontal_face_detector
+        
         self.detector = dlib.get_frontal_face_detector()
-        # dlib的68点模型，使用作者训练好的特征预测器
+       
         self.predictor = dlib.shape_predictor("C:/Users/as100/Downloads/shape_predictor_68_face_landmarks.dat")
 
-        #建cv2摄像头对象，这里使用电脑自带摄像头，如果接了外部摄像头，则自动切换到外部摄像头
+        
         self.cap = cv2.VideoCapture(1)
-        # 设置视频参数，propId设置的视频参数，value设置的参数值
+       
         self.cap.set(3, 480)
 
     def learning_face(self):
-        # cap.isOpened（） 返回true/false 检查初始化是否成功
+       
         face_width_max = 0
         face_width_min = 0
         count=0
         success=0
         while(self.cap.isOpened()):
-            # cap.read()
-            # 返回两个值：
-            #    一个布尔值true/false，用来判断读取视频是否成功/是否到视频末尾
-            #    图像对象，图像的三维矩阵
+            
             flag, im_rd = self.cap.read()
-            # 每帧数据延时1ms，延时为0读取的是静态帧
+            
             k = cv2.waitKey(100)
-            # 取灰度
+            
             img_gray = cv2.cvtColor(im_rd, cv2.COLOR_RGB2GRAY)
-            # 使用人脸检测器检测每一帧图像中的人脸。并返回人脸数rects
+            
             faces = self.detector(img_gray, 0)
-            # 待会要显示在屏幕上的字体
+         
             font = cv2.FONT_HERSHEY_SIMPLEX
-            # 如果检测到人脸
+          
             if(len(faces)!=0):
-                # 对每个人脸都标出68个特征点
+                
                 for i in range(len(faces)):
-                    # enumerate方法同时返回数据对象的索引和数据，k为索引，d为faces中的对象
+                    
                     for k, d in enumerate(faces):
-                        # 用红色矩形框出人脸
-                        #cv2.rectangle(im_rd, (d.left(), d.top()), (d.right(), d.bottom()), (0, 0, 255))
-                        # 计算人脸热别框边长
+                       
                         self.face_width = d.right() - d.left()
-                        # 使用预测器得到68点数据的坐标
+                        
                         shape = self.predictor(im_rd, d)
 
                         face_width_new=(shape.part(15).x-shape.part(34).x)/(shape.part(28).y-shape.part(9).y)                                                
@@ -82,18 +77,18 @@ class face_emotion():
                     print("")
                     break
             else:
-                # 没有检测到人脸
+             
                 cv2.putText(im_rd, "No Face", (20, 50), font, 1, (0, 0, 255), 1, cv2.LINE_AA)
-            # 添加说明
+          
             im_rd = cv2.putText(im_rd, "Esc: quit", (20, 450), font, 0.8, (0, 0, 255), 1, cv2.LINE_AA)
-            # 按下q键退出
+           
             if(cv2.waitKey(10) == 27):
                 break
-            # 窗口显示
+            
             cv2.imshow("camera", im_rd)
-        # 释放摄像头
+       
         self.cap.release()
-        # 删除建立的窗口
+        
         cv2.destroyAllWindows()
         return success
 
@@ -119,7 +114,7 @@ def face_prediction(success):
         images  = load_data(path)
         images /=255
         predictions = model.predict_on_batch(images)
-        #predictions = model.predict_classes(images)
+       
 
         print('%.3f' %(predictions[0,0]))
         print('%.3f' %(predictions[0,1]))
@@ -142,13 +137,13 @@ def face_prediction(success):
             return 0
             
 def get_image_hull_mask(image_shape, image_landmarks, ie_polys=None):
-    # get the mask of the image
+   
     if image_landmarks.shape[0] != 68:
         raise Exception(
             'get_image_hull_mask works only with 68 landmarks')
     int_lmrks = np.array(image_landmarks, dtype=np.int)
 
-    #hull_mask = np.zeros(image_shape[0:2]+(1,), dtype=np.float32)
+   
     hull_mask = np.full(image_shape[0:2] + (1,), 0, dtype=np.float32)
 
     cv2.fillConvexPoly(hull_mask, cv2.convexHull(
@@ -186,18 +181,18 @@ def get_image_hull_mask(image_shape, image_landmarks, ie_polys=None):
                         int_lmrks[8:9]
                         ))), (1,))
 
-    # nose
+ 
     cv2.fillConvexPoly(
         hull_mask, cv2.convexHull(int_lmrks[27:36]), (1,))
 
     if ie_polys is not None:
         ie_polys.overlay_mask(hull_mask)
-    #print()
+  
     return hull_mask
 
-# 加入alpha通道 控制透明度
+
 def merge_add_alpha(img_1, mask):
-    # merge rgb and mask into a rgba image
+  
     r_channel, g_channel, b_channel = cv2.split(img_1)
     if mask is not None:
         alpha_channel = np.ones(mask.shape, dtype=img_1.dtype)
@@ -245,14 +240,14 @@ def get_landmarks(image):
     return landmarks
 
 def single_face_alignment(face, landmarks):
-    eye_center = ((landmarks[36, 0] + landmarks[45, 0]) * 1. / 2,  # 计算两眼的中心坐标
+    eye_center = ((landmarks[36, 0] + landmarks[45, 0]) * 1. / 2,  
                   (landmarks[36, 1] + landmarks[45, 1]) * 1. / 2)
-    dx = (landmarks[45, 0] - landmarks[36, 0])  # note: right - right
+    dx = (landmarks[45, 0] - landmarks[36, 0])  
     dy = (landmarks[45, 1] - landmarks[36, 1])
 
-    angle = math.atan2(dy, dx) * 180. / math.pi  # 计算角度
-    RotateMatrix = cv2.getRotationMatrix2D(eye_center, angle, scale=1)  # 计算仿射矩阵
-    align_face = cv2.warpAffine(face, RotateMatrix, (face.shape[1], face.shape[0]))  # 进行放射变换，即旋转
+    angle = math.atan2(dy, dx) * 180. / math.pi  
+    RotateMatrix = cv2.getRotationMatrix2D(eye_center, angle, scale=1)  
+    align_face = cv2.warpAffine(face, RotateMatrix, (face.shape[1], face.shape[0])) 
     return align_face
 
 def face_cut(path,out_path):
